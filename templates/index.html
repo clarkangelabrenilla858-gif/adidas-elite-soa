@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ADIDAS — Elite Series</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;900&family=Oswald:wght@700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #000000;
+      --card-bg: #111111;
+      --accent: #ffffff;
+      --neon: #00ff41; 
+      --glass: rgba(255, 255, 255, 0.05);
+      --border: rgba(255, 255, 255, 0.1);
+      --transition: 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    body { background-color: var(--bg); color: #fff; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+    .promo { background: linear-gradient(90deg, #333, #000, #333); padding: 10px; text-align: center; font-size: 0.65rem; letter-spacing: 3px; font-weight: 700; border-bottom: 1px solid var(--border); }
+    .page { max-width: 1200px; margin: 0 auto; padding: 40px 24px; }
+    .nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 80px; }
+    .logo { font-family: 'Oswald', sans-serif; font-size: 2rem; letter-spacing: -1px; }
+    .hero { position: relative; margin-bottom: 100px; }
+    .hero h1 { font-family: 'Oswald', sans-serif; font-size: clamp(4rem, 15vw, 10rem); line-height: 0.8; text-transform: uppercase; opacity: 0.1; position: absolute; top: -50px; left: -10px; width: 100%; pointer-events: none; }
+    .hero-text { position: relative; z-index: 1; border-left: 4px solid #fff; padding-left: 20px; }
+    .hero-text h2 { font-weight: 900; font-size: 2.5rem; text-transform: uppercase; }
+    .watch-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 40px; margin-bottom: 100px; }
+    .watch-card { background: var(--card-bg); border: 1px solid var(--border); padding: 20px; transition: all var(--transition); cursor: pointer; position: relative; overflow: hidden; }
+    .watch-card:hover { transform: translateY(-10px); border-color: rgba(255,255,255,0.4); }
+    .watch-card.selected { border: 2px solid #fff; background: #1a1a1a; }
+    .card-img { height: 300px; display: flex; align-items: center; justify-content: center; }
+    .card-img img { width: 85%; height: auto; object-fit: contain; }
+    .card-body { padding: 20px 0 10px; }
+    .card-brand { font-size: 0.7rem; color: #888; text-transform: uppercase; letter-spacing: 2px; }
+    .card-name { font-size: 1.5rem; font-weight: 900; text-transform: uppercase; margin-bottom: 15px; }
+    .card-price { font-family: 'Oswald', sans-serif; font-size: 1.4rem; color: #fff; }
+    .order { background: var(--glass); backdrop-filter: blur(15px); border: 1px solid var(--border); padding: 40px; max-width: 550px; margin: 0 auto; }
+    .order h3 { font-family: 'Oswald', sans-serif; font-size: 1.8rem; margin-bottom: 30px; letter-spacing: 2px; }
+    .preview { display: flex; align-items: center; gap: 30px; padding-bottom: 25px; border-bottom: 1px solid var(--border); margin-bottom: 30px; }
+    .preview img { width: 120px; height: 120px; object-fit: contain; background: #222; border-radius: 4px; }
+    .buy-btn { width: 100%; padding: 25px; background: #fff; color: #000; font-weight: 900; text-transform: uppercase; border: none; cursor: pointer; letter-spacing: 4px; transition: 0.3s; }
+    .buy-btn:hover:not(:disabled) { background: var(--neon); }
+    .buy-btn:disabled { background: #333; color: #666; cursor: not-allowed; }
+    .result { margin-top: 25px; padding: 20px; display: none; text-align: center; font-weight: 900; }
+    .confirmed { color: var(--neon); border-left: 4px solid var(--neon); background: rgba(0, 255, 65, 0.1); }
+    .failed { color: #ff4136; border-left: 4px solid #ff4136; background: rgba(255, 65, 54, 0.1); }
+  </style>
+</head>
+<body>
+
+  <div class="promo">LIMITED COLLECTION — SHOP THE FUTURE</div>
+  <div class="page">
+    <nav class="nav">
+      <span class="logo">ADIDAS // ELITE</span>
+      <div style="font-size: 0.7rem; letter-spacing: 2px; color: #888;">04 / 22 / 2026</div>
+    </nav>
+
+    <div class="hero">
+      <h1>ORIGINALS</h1>
+      <div class="hero-text">
+        <h2>Curated Collection</h2>
+        <p style="color: #888; font-size: 0.9rem;">High-performance gear for the modern athlete.</p>
+      </div>
+    </div>
+
+    <div class="watch-grid" id="grid">
+      <div class="watch-card" data-id="1" onclick="pick(this)">
+        <div class="card-img"><img src="/static/images/response.png"></div>
+        <div class="card-body">
+          <p class="card-brand">Running / 001</p>
+          <h3 class="card-name">Response Super</h3>
+          <div class="card-price">₱6,500.00</div>
+        </div>
+      </div>
+
+      <div class="watch-card" data-id="2" onclick="pick(this)">
+        <div class="card-img"><img src="/static/images/daily.png"></div>
+        <div class="card-body">
+          <p class="card-brand">Originals / 002</p>
+          <h3 class="card-name">Daily 3.0</h3>
+          <div class="card-price">₱4,000.00</div>
+        </div>
+      </div>
+
+      <div class="watch-card" data-id="3" onclick="pick(this)">
+        <div class="card-img"><img src="/static/images/yeezy.png"></div>
+        <div class="card-body">
+          <p class="card-brand">Premium / 003</p>
+          <h3 class="card-name">Yeezy Boost</h3>
+          <div class="card-price">₱18,000.00</div>
+        </div>
+      </div>
+
+      <div class="watch-card" data-id="4" onclick="pick(this)">
+        <div class="card-img"><img src="/static/images/stansmith.png"></div>
+        <div class="card-body">
+          <p class="card-brand">Classics / 004</p>
+          <h3 class="card-name">Stan Smith</h3>
+          <div class="card-price">₱5,300.00</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="order">
+      <h3>SECURE CHECKOUT</h3>
+      <div class="preview">
+        <img id="pImg" src="" style="display:none">
+        <div>
+          <p id="pName" style="font-weight: 900; font-size: 1.4rem; text-transform: uppercase;">Awaiting Selection</p>
+          <p id="pPrice" style="color: #888;">₱ — — —</p>
+        </div>
+      </div>
+      <button class="buy-btn" id="buyBtn" disabled onclick="order()">Initialize Checkout</button>
+      <div class="result" id="result"></div>
+    </div>
+  </div>
+
+<script>
+    let inventory = {}; 
+    let sel = null;
+
+    async function loadProducts() {
+        try {
+            console.log("Attempting to fetch from cloud...");
+            const response = await fetch('http://127.0.0.1:5001/get_inventory');
+            const data = await response.json();
+            
+            inventory = {};
+            data.forEach(item => {
+                inventory[item.id] = item; 
+            });
+            console.log("Cloud Inventory Success!", inventory);
+        } catch (e) {
+            console.error("Connection to Port 5001 failed:", e);
+        }
+    }
+    
+    loadProducts();
+
+    function pick(card) {
+        document.querySelectorAll('.watch-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        sel = card.dataset.id;
+        const item = inventory[sel]; 
+
+        if (item) {
+            document.getElementById('pName').textContent = item.name;
+            document.getElementById('pPrice').textContent = '₱' + item.price.toLocaleString() + '.00';
+            const img = document.getElementById('pImg');
+            img.src = item.img; 
+            img.style.display = 'block';
+            document.getElementById('buyBtn').disabled = false;
+        }
+    }
+
+    // --- ADD THIS MISSING FUNCTION BELOW ---
+    async function order() {
+        const item = inventory[sel];
+        const resDiv = document.getElementById('result');
+        const btn = document.getElementById('buyBtn');
+        
+        // Prepare data for the Python backend
+        const orderData = { 
+            name: item.name, 
+            qty: 1, 
+            total: item.price 
+        };
+
+        btn.textContent = "PROCESSING...";
+        btn.disabled = true;
+
+        try {
+            const response = await fetch('/place_order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(orderData)
+            });
+            
+            const result = await response.json();
+            resDiv.style.display = 'block';
+            
+            if (response.ok) {
+                resDiv.className = 'result confirmed';
+                resDiv.textContent = "TRANSACTION SUCCESSFUL";
+            } else {
+                resDiv.className = 'result failed';
+                resDiv.textContent = "FAILED: " + result.message;
+            }
+        } catch (err) {
+            resDiv.style.display = 'block';
+            resDiv.className = 'result failed';
+            resDiv.textContent = "SERVER CONNECTION ERROR";
+        } finally {
+            btn.textContent = "INITIALIZE CHECKOUT";
+            btn.disabled = false;
+        }
+    }
+</script>
+</body>
+</html>
