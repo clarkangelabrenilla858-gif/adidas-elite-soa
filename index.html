@@ -138,21 +138,21 @@
     
     loadProducts();
 
-    function pick(card) {
-        document.querySelectorAll('.watch-card').forEach(c => c.classList.remove('selected'));
-        card.classList.add('selected');
-        sel = card.dataset.id;
-        const item = inventory[sel]; 
+    function pick(element) {
+    // 1. Get data from the clicked card
+    const name = element.querySelector('.card-name').innerText;
+    const price = element.querySelector('.card-price').innerText;
 
-        if (item) {
-            document.getElementById('pName').textContent = item.name;
-            document.getElementById('pPrice').textContent = '₱' + item.price.toLocaleString() + '.00';
-            const img = document.getElementById('pImg');
-            img.src = item.img; 
-            img.style.display = 'block';
-            document.getElementById('buyBtn').disabled = false;
-        }
+    // 2. Find the checkout elements
+    const checkoutName = document.querySelector('.checkout-details h3'); // Adjust selector if needed
+    const checkoutPrice = document.querySelector('.checkout-details p'); // Adjust selector if needed
+
+    // 3. Update the text
+    if (checkoutName && checkoutPrice) {
+        checkoutName.innerText = name;
+        checkoutPrice.innerText = price;
     }
+}
 
     // --- ADD THIS MISSING FUNCTION BELOW ---
     async function order() {
