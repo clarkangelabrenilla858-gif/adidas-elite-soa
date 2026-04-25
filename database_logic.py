@@ -2,23 +2,24 @@ import os
 from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-# 1. Connect to your Aiven Online Database
-# Included SSL arguments to solve the connection rejection from Render
+# 1. Database Configuration
 DATABASE_URL = "mysql+pymysql://avnadmin:AVNS_ReVnZeAjyn8LHJv_Vv8@mysql-2a07ba0b-clarkangelabrenilla858-6f67.c.aivencloud.com:19056/defaultdb"
 
+# Added longer timeout and pool settings to give Render more time to connect
 engine = create_engine(
     DATABASE_URL,
     connect_args={
-        "ssl": {
-            "ssl_mode": "REQUIRED"
-        }
+        "ssl": {"ssl_mode": "REQUIRED"},
+        "connect_timeout": 60  # Give it a full minute to find the server
     },
-    pool_pre_ping=True  # Helps prevent "Connection Lost" errors
+    pool_size=5,
+    max_overflow=10,
+    pool_pre_ping=True
 )
 
 Base = declarative_base()
 
-# 2. Define the Product Model
+# 2. Models
 class Product(Base):
     __tablename__ = 'products'
     id = Column(Integer, primary_key=True)
@@ -26,7 +27,6 @@ class Product(Base):
     price = Column(Integer)
     img_path = Column(String(255))
 
-# 3. Define the Order Model
 class Order(Base):
     __tablename__ = 'orders'
     id = Column(Integer, primary_key=True)
@@ -34,17 +34,18 @@ class Order(Base):
     quantity = Column(Integer)
     total_price = Column(Integer)
 
-# This ensures the 'orders' table is created if it doesn't exist yet
-Base.metadata.create_all(engine)
-
-# Create the session
+# 3. Session Setup
 Session = sessionmaker(bind=engine)
 session = Session()
 
-# Check the connection (for local testing)
-if __name__ == "__main__":
+# 4. The "Safe" Table Creator
+def setup_database():
     try:
-        with engine.connect() as connection:
-            print("Successfully connected to Aiven Online Database!")
+        Base.metadata.create_all(engine)
+        print("Database tables verified/created successfully!")
     except Exception as e:
-        print(f"Connection failed: {e}")
+        print(f"Database setup warning: {e}")
+
+# Call it only when running the file directly
+if __name__ == "__main__":
+    setup_database()
