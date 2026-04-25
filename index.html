@@ -151,36 +151,33 @@
     
     loadProducts();
 
-   function pick(element) {
-    // 1. Visual highlight
+function pick(element) {
+    // 1. Highlight the card
     document.querySelectorAll('.watch-card').forEach(card => card.classList.remove('selected'));
     element.classList.add('selected');
 
-    // 2. Get the ID and find the shoe in inventory
-    const rawId = element.getAttribute('data-id');
+    // 2. Get the ID from the card (e.g., "004")
+    const clickedId = element.getAttribute('data-id');
     
-    // We search the inventory for a match, whether it's "1" or 1
-    const foundItem = Object.values(inventory).find(item => String(item.id) === String(rawId));
+    // 3. Find that item in our inventory data
+    const item = Object.values(inventory).find(i => String(i.id).includes(clickedId) || String(clickedId).includes(i.id));
 
-    if (foundItem) {
-        sel = String(foundItem.id); // Save the exact ID used in the inventory object
+    if (item) {
+        sel = item; // Store the whole item object
+        document.getElementById('pName').innerText = item.name;
+        document.getElementById('pPrice').innerText = "₱" + item.price.toLocaleString();
         
-        // 3. Update Checkout Box UI
-        document.getElementById('pName').innerText = foundItem.name;
-        document.getElementById('pPrice').innerText = "₱" + foundItem.price.toLocaleString();
-        const previewImg = document.getElementById('pImg');
-        previewImg.src = element.querySelector('img').src;
-        previewImg.style.display = 'block';
+        // Show the image in checkout
+        const pImg = document.getElementById('pImg');
+        pImg.src = element.querySelector('img').src;
+        pImg.style.display = 'block';
 
-        // 4. Enable button
+        // Enable the button
         const btn = document.getElementById('buyBtn');
         btn.disabled = false;
-        btn.textContent = "CONFIRM ORDER";
-    } else {
-        console.error("Could not find ID " + rawId + " in:", inventory);
+        btn.classList.add('active'); // If you have a green class
     }
 }
-
 async function order() {
     const btn = document.getElementById('buyBtn');
     const item = inventory[sel];
