@@ -197,37 +197,39 @@
         });
         
        if (response.ok) {
-        // 1. Success Pop-up
-        alert("TRANSACTION SUCCESSFUL!\n\nYour order for " + item.name + " has been placed.");
-        
-        // 2. Reset the selection and UI
-        sel = null; 
-        document.querySelectorAll('.shoe-card').forEach(card => card.classList.remove('selected'));
-        
-        // 3. Clear the Checkout Display
-        document.getElementById('pName').innerText = "Awaiting Selection";
-        document.getElementById('pPrice').innerText = "₱ — — —";
-        document.getElementById('pImg').style.display = 'none';
-        
-        // 4. Hide the green success bar (optional, since it's a new start)
-        resDiv.style.display = 'none';
-        
-        // 5. Change button back to original state
-        btn.textContent = "CONFIRM ORDER";
-        btn.disabled = true; // Disable until they pick a new shoe
-    } else {
-        alert("ORDER FAILED: The server rejected the request.");
+            // 1. Success Pop-up
+            alert("TRANSACTION SUCCESSFUL!\n\nYour order for " + item.name + " has been placed.");
+            
+            // 2. Reset the selection variable and remove card highlights
+            sel = null; 
+            document.querySelectorAll('.shoe-card').forEach(card => card.classList.remove('selected'));
+            
+            // 3. Reset the Checkout Display back to empty state
+            document.getElementById('pName').innerText = "Awaiting Selection";
+            document.getElementById('pPrice').innerText = "₱ — — —";
+            const img = document.getElementById('pImg');
+            img.style.display = 'none';
+            img.src = ""; // Clear the image source
+            
+            // 4. Hide the result status bar
+            resDiv.style.display = 'none';
+            
+            // 5. Reset button to disabled state for the next customer
+            btn.textContent = "CONFIRM ORDER";
+            btn.disabled = true;
+            
+            console.log("UI successfully reset for next transaction.");
+        } else {
+            alert("ORDER FAILED: The server rejected the request.");
+            btn.textContent = "CONFIRM ORDER";
+            btn.disabled = false;
+        }
+    } catch (err) {
+        alert("CONNECTION ERROR: Could not reach the server. Please try again in 30 seconds.");
+        console.error(err);
         btn.textContent = "CONFIRM ORDER";
         btn.disabled = false;
     }
-} catch (err) {
-    alert("CONNECTION ERROR: Could not reach the server.");
-    console.error(err);
-    btn.textContent = "CONFIRM ORDER";
-    btn.disabled = false;
-}
-// Note: We removed 'finally' because we are handling the button 
-// differently for Success vs. Error cases now.
 }
 </script>
 </body>
