@@ -12,6 +12,13 @@ engine = create_engine(
 
 Base = declarative_base()
 
+class Product(Base):
+    __tablename__ = 'products'
+    id = Column(Integer, primary_key=True)
+    name = Column(String(100))
+    price = Column(Integer)
+    stock = Column(Integer)
+
 class Order(Base):
     __tablename__ = 'orders'
     id = Column(Integer, primary_key=True, autoincrement=True)
