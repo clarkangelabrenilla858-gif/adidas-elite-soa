@@ -172,20 +172,21 @@
     }
 
    async function order() {
-    // 1. If inventory hasn't loaded yet, we can't proceed
-    if (!sel || !inventory[sel]) {
-        alert("System busy: Please wait 5 seconds and try again.");
+    const btn = document.getElementById('orderBtn');
+    const resDiv = document.getElementById('result');
+    
+    // 1. Get the item data FIRST
+    const item = inventory[sel]; 
+    if (!item) {
+        alert("Please select a shoe first!");
         return;
     }
 
-    const item = inventory[sel];
-    const btn = document.getElementById('buyBtn');
-    const resDiv = document.getElementById('result');
-    
-    btn.textContent = "PROCESSING...";
-    btn.disabled = true;
-
     try {
+        btn.textContent = "PROCESSING...";
+        btn.disabled = true;
+
+        // 2. Send the data to Render
         const response = await fetch('https://adidas-elite-soa.onrender.com/place_order', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -195,40 +196,27 @@
                 total: item.price
             })
         });
-        
-       if (response.ok) {
-            // 1. Success Pop-up
-            alert("TRANSACTION SUCCESSFUL!\n\nYour order for " + item.name + " has been placed.");
+
+        if (response.ok) {
+            // 3. Success! SHOW THE ALERT FIRST
+            alert("TRANSACTION SUCCESSFUL!\n\nOrder for " + item.name + " placed.");
             
-            // 2. Reset the selection variable and remove card highlights
-            sel = null; 
-            document.querySelectorAll('.shoe-card').forEach(card => card.classList.remove('selected'));
-            
-            // 3. Reset the Checkout Display back to empty state
+            // 4. NOW RESET THE UI (After the alert is closed)
+            sel = null;
+            document.querySelectorAll('.shoe-card').forEach(c => c.classList.remove('selected'));
             document.getElementById('pName').innerText = "Awaiting Selection";
             document.getElementById('pPrice').innerText = "₱ — — —";
-            const img = document.getElementById('pImg');
-            img.style.display = 'none';
-            img.src = ""; // Clear the image source
-            
-            // 4. Hide the result status bar
+            document.getElementById('pImg').style.display = 'none';
             resDiv.style.display = 'none';
-            
-            // 5. Reset button to disabled state for the next customer
-            btn.textContent = "CONFIRM ORDER";
-            btn.disabled = true;
-            
-            console.log("UI successfully reset for next transaction.");
         } else {
+            // If the server says no (Screenshot 214)
             alert("ORDER FAILED: The server rejected the request.");
-            btn.textContent = "CONFIRM ORDER";
-            btn.disabled = false;
         }
     } catch (err) {
-        alert("CONNECTION ERROR: Could not reach the server. Please try again in 30 seconds.");
-        console.error(err);
+        alert("CONNECTION ERROR: Wake up the server and try again.");
+    } finally {
         btn.textContent = "CONFIRM ORDER";
-        btn.disabled = false;
+        btn.disabled = (sel === null); // Keep disabled if we reset, enable if it failed
     }
 }
 </script>
