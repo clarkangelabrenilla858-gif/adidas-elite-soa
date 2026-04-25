@@ -196,38 +196,24 @@
             })
         });
         
-       if (response.ok) {
-        // 1. Success Pop-up
-        alert("TRANSACTION SUCCESSFUL!\n\nYour order for " + item.name + " has been placed.");
-        
-        // 2. Reset the selection and UI
-        sel = null; 
-        document.querySelectorAll('.shoe-card').forEach(card => card.classList.remove('selected'));
-        
-        // 3. Clear the Checkout Display
-        document.getElementById('pName').innerText = "Awaiting Selection";
-        document.getElementById('pPrice').innerText = "₱ — — —";
-        document.getElementById('pImg').style.display = 'none';
-        
-        // 4. Hide the green success bar (optional, since it's a new start)
-        resDiv.style.display = 'none';
-        
-        // 5. Change button back to original state
-        btn.textContent = "CONFIRM ORDER";
-        btn.disabled = true; // Disable until they pick a new shoe
-    } else {
-        alert("ORDER FAILED: The server rejected the request.");
+        if (response.ok) {
+            // This is the "Success" pop-up you want!
+            alert("TRANSACTION SUCCESSFUL!\n\nYour order for " + item.name + " has been placed.");
+            
+            // Also update the UI for visual proof
+            resDiv.style.display = 'block';
+            resDiv.className = 'result confirmed';
+            resDiv.textContent = "SUCCESS: ORDER PLACED";
+        } else {
+            alert("ORDER FAILED: The server rejected the request.");
+        }
+    } catch (err) {
+        alert("CONNECTION ERROR: Could not reach the server.");
+        console.error(err);
+    } finally {
         btn.textContent = "CONFIRM ORDER";
         btn.disabled = false;
     }
-} catch (err) {
-    alert("CONNECTION ERROR: Could not reach the server.");
-    console.error(err);
-    btn.textContent = "CONFIRM ORDER";
-    btn.disabled = false;
-}
-// Note: We removed 'finally' because we are handling the button 
-// differently for Success vs. Error cases now.
 }
 </script>
 </body>
