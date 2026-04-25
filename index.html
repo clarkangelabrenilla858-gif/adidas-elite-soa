@@ -127,16 +127,19 @@
     async function loadProducts() {
         try {
             console.log("Connecting to Render backend...");
+            // Added a small timeout/check
             const response = await fetch('https://adidas-elite-soa.onrender.com/get_inventory');
             const data = await response.json();
             
             inventory = {};
             data.forEach(item => {
-                inventory[item.id.toString()] = item; 
+                // Ensure the ID is stored as a string to match data-id
+                inventory[String(item.id)] = item; 
             });
             console.log("Cloud Inventory Success!", inventory);
         } catch (e) {
             console.error("Cloud connection failed. Using local backup.");
+            // LOCAL BACKUP: Matches the data-id in your HTML exactly
             inventory = {
                 "1": { name: "Response Super", price: 6500 },
                 "2": { name: "Daily 3.0", price: 4000 },
@@ -149,14 +152,11 @@
     loadProducts();
 
     function pick(element) {
-        // Visual highlight - Fixed to match your CSS class '.watch-card'
         document.querySelectorAll('.watch-card').forEach(card => card.classList.remove('selected'));
         element.classList.add('selected');
 
-        // Capture the ID
-        sel = element.getAttribute('data-id'); 
+        sel = String(element.getAttribute('data-id')); // Force string type
 
-        // Update Checkout Box UI
         const name = element.querySelector('.card-name').innerText;
         const price = element.querySelector('.card-price').innerText;
         const imgPath = element.querySelector('img').src;
@@ -167,19 +167,21 @@
         previewImg.src = imgPath;
         previewImg.style.display = 'block';
 
-        // Enable button - Matches your HTML ID 'buyBtn'
         const btn = document.getElementById('buyBtn');
         btn.disabled = false;
         btn.textContent = "CONFIRM ORDER";
     }
 
    async function order() {
-    const btn = document.getElementById('buyBtn'); // FIXED: Changed from orderBtn to buyBtn
+    const btn = document.getElementById('buyBtn'); 
     const resDiv = document.getElementById('result');
     
+    // Check if sel exists in inventory
     const item = inventory[sel]; 
     if (!item) {
-        alert("Please select a shoe first!");
+        console.log("Current selection ID:", sel);
+        console.log("Current inventory:", inventory);
+        alert("Selection error. Please click the shoe image again.");
         return;
     }
 
@@ -198,23 +200,27 @@
         });
 
         if (response.ok) {
-            alert("TRANSACTION SUCCESSFUL!\n\nOrder for " + item.name + " placed.");
+            alert("TRANSACTION SUCCESSFUL!\n\nOrder for " + item.name + " saved to Aiven.");
             
             // RESET THE UI
             sel = null;
-            document.querySelectorAll('.watch-card').forEach(c => c.classList.remove('selected')); // FIXED class name
+            document.querySelectorAll('.watch-card').forEach(c => c.classList.remove('selected'));
             document.getElementById('pName').innerText = "Awaiting Selection";
             document.getElementById('pPrice').innerText = "₱ — — —";
             document.getElementById('pImg').style.display = 'none';
-            resDiv.style.display = 'none';
+            btn.disabled = true;
+            btn.textContent = "Initialize Checkout";
         } else {
-            alert("ORDER FAILED: The server rejected the request.");
+            const errData = await response.json();
+            alert("ORDER FAILED: " + (errData.message || "Server Error"));
         }
     } catch (err) {
-        alert("CONNECTION ERROR: Wake up the server and try again.");
+        alert("CONNECTION ERROR: The Render server is still waking up. Please wait 30 seconds and try again.");
     } finally {
-        btn.textContent = "CONFIRM ORDER";
-        btn.disabled = (sel === null); 
+        if (sel !== null) {
+            btn.textContent = "CONFIRM ORDER";
+            btn.disabled = false;
+        }
     }
 }
 </script>
