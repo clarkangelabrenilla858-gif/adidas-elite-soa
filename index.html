@@ -139,27 +139,30 @@
     loadProducts();
 
    function pick(element) {
-    // 1. Remove "selected" class from all cards and add to clicked one
+    // 1. Highlight the selection (visual feedback)
+    // This removes the 'selected' look from others and gives it to the one you clicked
     document.querySelectorAll('.watch-card').forEach(card => card.classList.remove('selected'));
     element.classList.add('selected');
 
-    // 2. Save the ID for the order() function
+    // 2. Capture the ID for the database
+    // This connects the click to your inventory data
     sel = element.getAttribute('data-id');
 
-    // 3. Get the specific data from the card
+    // 3. Extract the shoe details from the card you clicked
     const name = element.querySelector('.card-name').innerText;
     const price = element.querySelector('.card-price').innerText;
     const imgPath = element.querySelector('img').src;
 
-    // 4. Update the Secure Checkout area using the correct IDs
+    // 4. Send those details to the Secure Checkout box
     document.getElementById('pName').innerText = name;
     document.getElementById('pPrice').innerText = price;
     
+    // 5. Update and show the preview image
     const previewImg = document.getElementById('pImg');
     previewImg.src = imgPath;
     previewImg.style.display = 'block';
 
-    // 5. Enable the button
+    // 6. Unlock the "Initialize Checkout" button
     const buyBtn = document.getElementById('buyBtn');
     buyBtn.disabled = false;
     buyBtn.textContent = "CONFIRM ORDER";
