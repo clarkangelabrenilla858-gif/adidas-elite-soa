@@ -138,20 +138,31 @@
     
     loadProducts();
 
-    function pick(element) {
-    // 1. Get data from the clicked card
+   function pick(element) {
+    // 1. Remove "selected" class from all cards and add to clicked one
+    document.querySelectorAll('.watch-card').forEach(card => card.classList.remove('selected'));
+    element.classList.add('selected');
+
+    // 2. Save the ID for the order() function
+    sel = element.getAttribute('data-id');
+
+    // 3. Get the specific data from the card
     const name = element.querySelector('.card-name').innerText;
     const price = element.querySelector('.card-price').innerText;
+    const imgPath = element.querySelector('img').src;
 
-    // 2. Find the checkout elements
-    const checkoutName = document.querySelector('.checkout-details h3'); // Adjust selector if needed
-    const checkoutPrice = document.querySelector('.checkout-details p'); // Adjust selector if needed
+    // 4. Update the Secure Checkout area using the correct IDs
+    document.getElementById('pName').innerText = name;
+    document.getElementById('pPrice').innerText = price;
+    
+    const previewImg = document.getElementById('pImg');
+    previewImg.src = imgPath;
+    previewImg.style.display = 'block';
 
-    // 3. Update the text
-    if (checkoutName && checkoutPrice) {
-        checkoutName.innerText = name;
-        checkoutPrice.innerText = price;
-    }
+    // 5. Enable the button
+    const buyBtn = document.getElementById('buyBtn');
+    buyBtn.disabled = false;
+    buyBtn.textContent = "CONFIRM ORDER";
 }
 
     // --- ADD THIS MISSING FUNCTION BELOW ---
