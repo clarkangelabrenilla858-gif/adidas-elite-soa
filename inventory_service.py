@@ -27,4 +27,7 @@ def update_inventory():
         return jsonify({"message": "Product not found"}), 404
 
 if __name__ == '__main__':
-    app.run(port=5001, debug=True)
+    import os
+    # Render provides a 'PORT' environment variable. If it's not there, it uses 5001.
+    port = int(os.environ.get("PORT", 5001))
+    app.run(host='0.0.0.0', port=port)
