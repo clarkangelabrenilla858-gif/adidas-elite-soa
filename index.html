@@ -138,76 +138,80 @@
     
     loadProducts();
 
-   function pick(element) {
-    // 1. Visual feedback: add white border to the clicked shoe
+function pick(element) {
+    // 1. Visual highlight
     document.querySelectorAll('.watch-card').forEach(card => card.classList.remove('selected'));
     element.classList.add('selected');
 
-    // 2. Set the ID for the order() function
-    sel = element.getAttribute('data-id');
+    // 2. CRITICAL: Update the global 'sel' variable so the order function can see it
+    sel = element.getAttribute('data-id'); 
 
-    // 3. Get the info from the card you just clicked
+    // 3. Update the Checkout Box
     const name = element.querySelector('.card-name').innerText;
     const price = element.querySelector('.card-price').innerText;
     const imgPath = element.querySelector('img').src;
 
-    // 4. Update the Secure Checkout area using IDs (pName, pPrice, pImg)
     document.getElementById('pName').innerText = name;
     document.getElementById('pPrice').innerText = price;
-    
-    // 5. Update and show the shoe image in checkout
     const previewImg = document.getElementById('pImg');
     previewImg.src = imgPath;
     previewImg.style.display = 'block';
 
-    // 6. Enable the button so you can actually click it
-    const buyBtn = document.getElementById('buyBtn');
-    buyBtn.disabled = false;
-    buyBtn.textContent = "CONFIRM ORDER";
+    // 4. Enable the button
+    const btn = document.getElementById('buyBtn');
+    btn.disabled = false;
+    btn.textContent = "CONFIRM ORDER";
 }
 
-    // --- ADD THIS MISSING FUNCTION BELOW ---
-    async function order() {
-        const item = inventory[sel];
-        const resDiv = document.getElementById('result');
-        const btn = document.getElementById('buyBtn');
-        
-        // Prepare data for the Python backend
-        const orderData = { 
-            name: item.name, 
-            qty: 1, 
-            total: item.price 
-        };
-
-        btn.textContent = "PROCESSING...";
-        btn.disabled = true;
-
-        try {
-            const response = await fetch('https://adidas-elite-soa.onrender.com/place_order', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(orderData)
-            });
-            
-            const result = await response.json();
-            resDiv.style.display = 'block';
-            
-            if (response.ok) {
-                resDiv.className = 'result confirmed';
-                resDiv.textContent = "TRANSACTION SUCCESSFUL";
-            } else {
-                resDiv.className = 'result failed';
-                resDiv.textContent = "FAILED: " + result.message;
-            }
-        } catch (err) {
-            resDiv.style.display = 'block';
-            resDiv.className = 'result failed';
-            resDiv.textContent = "SERVER CONNECTION ERROR";
-        } finally {
-            btn.textContent = "INITIALIZE CHECKOUT";
-            btn.disabled = false;
-        }
+async function order() {
+    // Check if something is actually selected
+    if (!sel) {
+        alert("Please select a shoe first!");
+        return;
     }
+
+    const item = inventory[sel];
+    const resDiv = document.getElementById('result');
+    const btn = document.getElementById('buyBtn');
+    
+    // Prepare data for Render backend
+    const orderData = { 
+        name: item.name, 
+        qty: 1, 
+        total: item.price 
+    };
+
+    btn.textContent = "PROCESSING...";
+    btn.disabled = true;
+
+    try {
+        const response = await fetch('https://adidas-elite-soa.onrender.com/place_order', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(orderData)
+        });
+        
+        const result = await response.json();
+        resDiv.style.display = 'block';
+        
+        if (response.ok) {
+            resDiv.className = 'result confirmed';
+            resDiv.textContent = "TRANSACTION SUCCESSFUL";
+            alert("Success! Your order for " + item.name + " has been placed.");
+        } else {
+            resDiv.className = 'result failed';
+            resDiv.textContent = "FAILED: " + result.message;
+        }
+    } catch (err) {
+        resDiv.style.display = 'block';
+        resDiv.className = 'result failed';
+        resDiv.textContent = "SERVER ERROR";
+        console.error(err);
+    } finally {
+        btn.textContent = "CONFIRM ORDER";
+        btn.disabled = false;
+    }
+}
 </script>
 </body>
 </html>
