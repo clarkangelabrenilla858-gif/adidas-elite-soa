@@ -9,17 +9,18 @@ CORS(app)
 def place_order():
     data = request.json
     try:
+        # Create a new row for the 'orders' table
         new_order = Order(
             product_name=str(data['name']),
             quantity=int(data['qty']),
             total_price=int(data['total'])
         )
         session.add(new_order)
-        session.commit()
-        return jsonify({"message": "Order saved!"}), 200
+        session.commit() # This is where the 'save' happens
+        return jsonify({"message": "Success"}), 200
     except Exception as e:
-        session.rollback()
-        print(f"Database Error: {e}")
+        session.rollback() # Clears the error if it fails
+        print(f"Detailed Error: {e}")
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
