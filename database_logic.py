@@ -3,14 +3,14 @@ from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 # 1. Database Configuration
-DATABASE_URL = "mysql+pymysql://avnadmin:AVNS_ReVnZeAjyn8LHJv_Vv8@mysql-2a07ba0b-clarkangelabrenilla858-6f67.c.aivencloud.com:19056/defaultdb?ssl_mode=REQUIRED"
+# FIXED: Removed the ?ssl_mode from the end of the string to prevent the error
+DATABASE_URL = "mysql+pymysql://avnadmin:AVNS_ReVnZeAjyn8LHJv_Vv8@mysql-2a07ba0b-clarkangelabrenilla858-6f67.c.aivencloud.com:19056/defaultdb"
 
-# Added longer timeout and pool settings to give Render more time to connect
 engine = create_engine(
     DATABASE_URL,
     connect_args={
-        "ssl": {"ssl_mode": "REQUIRED"},
-        "connect_timeout": 60  # Give it a full minute to find the server
+        "ssl": {"ssl_mode": "REQUIRED"}, # This is the correct way to pass it
+        "connect_timeout": 60 
     },
     pool_size=5,
     max_overflow=10,
