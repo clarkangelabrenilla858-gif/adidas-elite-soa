@@ -151,37 +151,44 @@
     
     loadProducts();
 
-    function pick(element) {
-        document.querySelectorAll('.watch-card').forEach(card => card.classList.remove('selected'));
-        element.classList.add('selected');
+   function pick(element) {
+    // 1. Visual highlight
+    document.querySelectorAll('.watch-card').forEach(card => card.classList.remove('selected'));
+    element.classList.add('selected');
 
-        sel = String(element.getAttribute('data-id')); // Force string type
+    // 2. Get the ID and find the shoe in inventory
+    const rawId = element.getAttribute('data-id');
+    
+    // We search the inventory for a match, whether it's "1" or 1
+    const foundItem = Object.values(inventory).find(item => String(item.id) === String(rawId));
 
-        const name = element.querySelector('.card-name').innerText;
-        const price = element.querySelector('.card-price').innerText;
-        const imgPath = element.querySelector('img').src;
-
-        document.getElementById('pName').innerText = name;
-        document.getElementById('pPrice').innerText = price;
+    if (foundItem) {
+        sel = String(foundItem.id); // Save the exact ID used in the inventory object
+        
+        // 3. Update Checkout Box UI
+        document.getElementById('pName').innerText = foundItem.name;
+        document.getElementById('pPrice').innerText = "₱" + foundItem.price.toLocaleString();
         const previewImg = document.getElementById('pImg');
-        previewImg.src = imgPath;
+        previewImg.src = element.querySelector('img').src;
         previewImg.style.display = 'block';
 
+        // 4. Enable button
         const btn = document.getElementById('buyBtn');
         btn.disabled = false;
         btn.textContent = "CONFIRM ORDER";
+    } else {
+        console.error("Could not find ID " + rawId + " in:", inventory);
     }
+}
 
-   async function order() {
-    const btn = document.getElementById('buyBtn'); 
-    const resDiv = document.getElementById('result');
-    
-    // Check if sel exists in inventory
-    const item = inventory[sel]; 
+async function order() {
+    const btn = document.getElementById('buyBtn');
+    const item = inventory[sel];
+
     if (!item) {
-        console.log("Current selection ID:", sel);
-        console.log("Current inventory:", inventory);
-        alert("Selection error. Please click the shoe image again.");
+        // If it still fails, we do a manual fallback check
+        alert("Selection sync error. Refreshing inventory...");
+        loadProducts(); // Try to reload the data
         return;
     }
 
@@ -200,27 +207,16 @@
         });
 
         if (response.ok) {
-            alert("TRANSACTION SUCCESSFUL!\n\nOrder for " + item.name + " saved to Aiven.");
-            
-            // RESET THE UI
-            sel = null;
-            document.querySelectorAll('.watch-card').forEach(c => c.classList.remove('selected'));
-            document.getElementById('pName').innerText = "Awaiting Selection";
-            document.getElementById('pPrice').innerText = "₱ — — —";
-            document.getElementById('pImg').style.display = 'none';
-            btn.disabled = true;
-            btn.textContent = "Initialize Checkout";
+            alert("SUCCESS! Order for " + item.name + " saved to Aiven.");
+            location.reload(); // Refresh the page to clear everything for the next order
         } else {
-            const errData = await response.json();
-            alert("ORDER FAILED: " + (errData.message || "Server Error"));
+            alert("ORDER FAILED: Check your Render logs.");
         }
     } catch (err) {
-        alert("CONNECTION ERROR: The Render server is still waking up. Please wait 30 seconds and try again.");
+        alert("CONNECTION ERROR: Server is likely sleeping. Wait 10 seconds.");
     } finally {
-        if (sel !== null) {
-            btn.textContent = "CONFIRM ORDER";
-            btn.disabled = false;
-        }
+        btn.disabled = false;
+        btn.textContent = "CONFIRM ORDER";
     }
 }
 </script>
