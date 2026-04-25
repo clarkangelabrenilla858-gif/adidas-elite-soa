@@ -122,24 +122,22 @@
 
 <script>
     let inventory = {}; 
-    let sel = null;
+    let selId = null; // Changed to selId to be clear it's just the number
 
     async function loadProducts() {
         try {
             console.log("Connecting to Render backend...");
-            // Added a small timeout/check
             const response = await fetch('https://adidas-elite-soa.onrender.com/get_inventory');
             const data = await response.json();
             
             inventory = {};
             data.forEach(item => {
-                // Ensure the ID is stored as a string to match data-id
+                // Force ID to string so "1" matches "1"
                 inventory[String(item.id)] = item; 
             });
             console.log("Cloud Inventory Success!", inventory);
         } catch (e) {
             console.error("Cloud connection failed. Using local backup.");
-            // LOCAL BACKUP: Matches the data-id in your HTML exactly
             inventory = {
                 "1": { name: "Response Super", price: 6500 },
                 "2": { name: "Daily 3.0", price: 4000 },
@@ -151,71 +149,70 @@
     
     loadProducts();
 
-function pick(element) {
-    // 1. Highlight the card
-    document.querySelectorAll('.watch-card').forEach(card => card.classList.remove('selected'));
-    element.classList.add('selected');
+    function pick(element) {
+        // 1. Visual highlight
+        document.querySelectorAll('.watch-card').forEach(card => card.classList.remove('selected'));
+        element.classList.add('selected');
 
-    // 2. Get the ID from the card (e.g., "004")
-    const clickedId = element.getAttribute('data-id');
-    
-    // 3. Find that item in our inventory data
-    const item = Object.values(inventory).find(i => String(i.id).includes(clickedId) || String(clickedId).includes(i.id));
-
-    if (item) {
-        sel = item; // Store the whole item object
-        document.getElementById('pName').innerText = item.name;
-        document.getElementById('pPrice').innerText = "₱" + item.price.toLocaleString();
+        // 2. Get the ID
+        const clickedId = String(element.getAttribute('data-id'));
         
-        // Show the image in checkout
-        const pImg = document.getElementById('pImg');
-        pImg.src = element.querySelector('img').src;
-        pImg.style.display = 'block';
+        // 3. Find in inventory
+        const item = inventory[clickedId];
 
-        // Enable the button
-        const btn = document.getElementById('buyBtn');
-        btn.disabled = false;
-        btn.classList.add('active'); // If you have a green class
-    }
-}
-async function order() {
-    const btn = document.getElementById('buyBtn');
-    const item = inventory[sel];
+        if (item) {
+            selId = clickedId; // Save the ID "1", "2", etc.
+            
+            // 4. Update UI
+            document.getElementById('pName').innerText = item.name;
+            document.getElementById('pPrice').innerText = "₱" + item.price.toLocaleString();
+            
+            const pImg = document.getElementById('pImg');
+            pImg.src = element.querySelector('img').src;
+            pImg.style.display = 'block';
 
-    if (!item) {
-        // If it still fails, we do a manual fallback check
-        alert("Selection sync error. Refreshing inventory...");
-        loadProducts(); // Try to reload the data
-        return;
-    }
-
-    try {
-        btn.textContent = "PROCESSING...";
-        btn.disabled = true;
-
-        const response = await fetch('https://adidas-elite-soa.onrender.com/place_order', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                name: item.name,
-                qty: 1,
-                total: item.price
-            })
-        });
-
-        if (response.ok) {
-            alert("SUCCESS! Order for " + item.name + " saved to Aiven.");
-            location.reload(); // Refresh the page to clear everything for the next order
-        } else {
-            alert("ORDER FAILED: Check your Render logs.");
+            const btn = document.getElementById('buyBtn');
+            btn.disabled = false;
+            btn.textContent = "CONFIRM ORDER";
         }
-    } catch (err) {
-        alert("CONNECTION ERROR: Server is likely sleeping. Wait 10 seconds.");
-    } finally {
-        btn.disabled = false;
-        btn.textContent = "CONFIRM ORDER";
     }
-}
+
+    async function order() {
+        if (!selId || !inventory[selId]) {
+            alert("Please select a shoe first!");
+            return;
+        }
+
+        const item = inventory[selId];
+        const btn = document.getElementById('buyBtn');
+
+        try {
+            btn.textContent = "PROCESSING...";
+            btn.disabled = true;
+
+            const response = await fetch('https://adidas-elite-soa.onrender.com/place_order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: item.name,
+                    qty: 1,
+                    total: item.price
+                })
+            });
+
+            if (response.ok) {
+                alert("SUCCESS! Order for " + item.name + " saved to Aiven Cloud.");
+                location.reload(); 
+            } else {
+                alert("ORDER FAILED: The backend is live but the database rejected the save.");
+            }
+        } catch (err) {
+            alert("CONNECTION ERROR: Server is likely sleeping. Wait 15 seconds.");
+        } finally {
+            btn.disabled = false;
+            btn.textContent = "CONFIRM ORDER";
+        }
+    }
 </script>
 </body>
 </html>
