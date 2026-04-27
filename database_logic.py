@@ -18,8 +18,7 @@ class Product(Base):
     name = Column(String(100))
     price = Column(Integer)
     stock = Column(Integer)
-    # Add this line below:
-    image_url = Column(String(255))
+    image_url = Column(String(255)) # MAKE SURE THIS LINE IS THERE
 
 class Order(Base):
     __tablename__ = 'orders'
