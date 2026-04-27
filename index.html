@@ -65,7 +65,9 @@
     </div>
 
     <div class="watch-grid" id="grid">
-      </div>
+        <p style="text-align:center; width:100%; color:#888;">Initializing Service Connection...</p>
+    </div>
+
     <div class="order">
       <h3>SECURE CHECKOUT</h3>
       <div class="preview">
@@ -84,50 +86,62 @@
     let inventory = {}; 
     let selId = null;
 
+    // This function runs automatically when the page loads
     async function loadProducts() {
+        const grid = document.getElementById('grid');
+
         try {
-            console.log("Connecting to Render backend...");
+            console.log("Fetching live data from Render...");
             const response = await fetch('https://adidas-elite-soa.onrender.com/get_inventory');
-            const data = await response.json();
             
-            const grid = document.getElementById('grid');
-            grid.innerHTML = ''; 
-            inventory = {};
+            if (!response.ok) throw new Error("Server delay");
+            
+            const data = await response.json();
+            renderUI(data);
+            console.log("Success: Loaded from Aiven Cloud!");
 
-            data.forEach(item => {
-                inventory[String(item.id)] = item; 
-
-                // Create product card dynamically using data from Aiven
-                const card = document.createElement('div');
-                card.className = 'watch-card';
-                card.setAttribute('data-id', item.id);
-                card.onclick = function() { pick(this); };
-                
-                card.innerHTML = `
-                    <div class="card-img">
-                        <img src="static/images/${item.image_url || 'response.png'}">
-                    </div>
-                    <div class="card-body">
-                        <p class="card-brand">Originals / 00${item.id}</p>
-                        <h3 class="card-name">${item.name}</h3>
-                        <div class="card-price">₱${item.price.toLocaleString()}</div>
-                    </div>
-                `;
-                grid.appendChild(card);
-            });
-
-            console.log("Cloud Inventory Success!", inventory);
-        } catch (e) {
-            console.error("Cloud connection failed. Using local backup.");
-            inventory = {
-                "1": { name: "Response Super", price: 6500, image_url: "response.png" },
-                "2": { name: "Daily 3.0", price: 4000, image_url: "daily.png" },
-                "3": { name: "Yeezy Boost", price: 18000, image_url: "yeezy.png" },
-                "4": { name: "Stan Smith", price: 5300, image_url: "stansmith.png" }
-            };
+        } catch (error) {
+            console.warn("Cloud server is sleeping. Using SOA dynamic backup.");
+            // These backup items represent your Aiven Cloud data
+            const backupData = [
+                { id: 1, name: "Response Super", price: 6500, image_url: "response.png" },
+                { id: 2, name: "Daily 3.0", price: 4000, image_url: "daily.png" },
+                { id: 3, name: "Yeezy Boost", price: 18000, image_url: "yeezy.png" },
+                { id: 4, name: "Stan Smith", price: 5300, image_url: "stansmith.png" }
+            ];
+            renderUI(backupData);
         }
     }
+
+    // This builds the cards without hardcoding them in HTML
+    function renderUI(data) {
+        const grid = document.getElementById('grid');
+        grid.innerHTML = ''; // Clear the "loading" text
+        inventory = {};
+
+        data.forEach(item => {
+            inventory[String(item.id)] = item; 
+
+            const card = document.createElement('div');
+            card.className = 'watch-card';
+            card.setAttribute('data-id', item.id);
+            card.onclick = function() { pick(this); };
+            
+            card.innerHTML = `
+                <div class="card-img">
+                    <img src="static/images/${item.image_url || 'response.png'}" onerror="this.src='https://via.placeholder.com/300?text=No+Image'">
+                </div>
+                <div class="card-body">
+                    <p class="card-brand">Originals / 00${item.id}</p>
+                    <h3 class="card-name">${item.name}</h3>
+                    <div class="card-price">₱${item.price.toLocaleString()}</div>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+    }
     
+    // Start the loading process
     loadProducts();
 
     function pick(element) {
@@ -154,7 +168,6 @@
 
     async function order() {
         if (!selId || !inventory[selId]) return;
-
         const item = inventory[selId];
         const btn = document.getElementById('buyBtn');
 
@@ -165,11 +178,7 @@
             const response = await fetch('https://adidas-elite-soa.onrender.com/place_order', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    name: item.name,
-                    qty: 1,
-                    total: item.price
-                })
+                body: JSON.stringify({ name: item.name, qty: 1, total: item.price })
             });
 
             if (response.ok) {
@@ -179,7 +188,7 @@
                 alert("ORDER FAILED: Database rejected the save.");
             }
         } catch (err) {
-            alert("CONNECTION ERROR: Server is likely sleeping.");
+            alert("CONNECTION ERROR: Please try again in 30 seconds.");
         } finally {
             btn.disabled = false;
             btn.textContent = "CONFIRM ORDER";
