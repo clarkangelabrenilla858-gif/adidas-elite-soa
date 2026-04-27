@@ -28,7 +28,7 @@
     .watch-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 40px; margin-bottom: 100px; }
     .watch-card { background: var(--card-bg); border: 1px solid var(--border); padding: 20px; transition: all var(--transition); cursor: pointer; position: relative; overflow: hidden; }
     .watch-card:hover { transform: translateY(-10px); border-color: rgba(255,255,255,0.4); }
-    .watch-card.selected { border: 2px solid #fff; background: #1a1a1a; }
+    .watch-card.selected { border: 3px solid #00ff41 !important; background: #1a1a1a; }
     .card-img { height: 300px; display: flex; align-items: center; justify-content: center; }
     .card-img img { width: 85%; height: auto; object-fit: contain; }
     .card-body { padding: 20px 0 10px; }
@@ -45,10 +45,6 @@
     .result { margin-top: 25px; padding: 20px; display: none; text-align: center; font-weight: 900; }
     .confirmed { color: var(--neon); border-left: 4px solid var(--neon); background: rgba(0, 255, 65, 0.1); }
     .failed { color: #ff4136; border-left: 4px solid #ff4136; background: rgba(255, 65, 54, 0.1); }
-    .watch-card.selected { 
-    border: 3px solid #00ff41 !important; /* This matches your --neon color */
-    background: #1a1a1a; 
-}
   </style>
 </head>
 <body>
@@ -57,7 +53,7 @@
   <div class="page">
     <nav class="nav">
       <span class="logo">ADIDAS // ELITE</span>
-      <div style="font-size: 0.7rem; letter-spacing: 2px; color: #888;">04 / 22 / 2026</div>
+      <div style="font-size: 0.7rem; letter-spacing: 2px; color: #888;">04 / 27 / 2026</div>
     </nav>
 
     <div class="hero">
@@ -69,43 +65,7 @@
     </div>
 
     <div class="watch-grid" id="grid">
-      <div class="watch-card" data-id="1" onclick="pick(this)">
-        <div class="card-img"><img src="static/images/response.png"></div>
-        <div class="card-body">
-          <p class="card-brand">Running / 001</p>
-          <h3 class="card-name">Response Super</h3>
-          <div class="card-price">₱6,500.00</div>
-        </div>
       </div>
-
-      <div class="watch-card" data-id="2" onclick="pick(this)">
-        <div class="card-img"><img src="static/images/daily.png"></div>
-        <div class="card-body">
-          <p class="card-brand">Originals / 002</p>
-          <h3 class="card-name">Daily 3.0</h3>
-          <div class="card-price">₱4,000.00</div>
-        </div>
-      </div>
-
-      <div class="watch-card" data-id="3" onclick="pick(this)">
-        <div class="card-img"><img src="static/images/yeezy.png"></div>
-        <div class="card-body">
-          <p class="card-brand">Premium / 003</p>
-          <h3 class="card-name">Yeezy Boost</h3>
-          <div class="card-price">₱18,000.00</div>
-        </div>
-      </div>
-
-      <div class="watch-card" data-id="4" onclick="pick(this)">
-        <div class="card-img"><img src="static/images/stansmith.png"></div>
-        <div class="card-body">
-          <p class="card-brand">Classics / 004</p>
-          <h3 class="card-name">Stan Smith</h3>
-          <div class="card-price">₱5,300.00</div>
-        </div>
-      </div>
-    </div>
-
     <div class="order">
       <h3>SECURE CHECKOUT</h3>
       <div class="preview">
@@ -122,7 +82,7 @@
 
 <script>
     let inventory = {}; 
-    let selId = null; // Changed to selId to be clear it's just the number
+    let selId = null;
 
     async function loadProducts() {
         try {
@@ -130,19 +90,40 @@
             const response = await fetch('https://adidas-elite-soa.onrender.com/get_inventory');
             const data = await response.json();
             
+            const grid = document.getElementById('grid');
+            grid.innerHTML = ''; 
             inventory = {};
+
             data.forEach(item => {
-                // Force ID to string so "1" matches "1"
                 inventory[String(item.id)] = item; 
+
+                // Create product card dynamically using data from Aiven
+                const card = document.createElement('div');
+                card.className = 'watch-card';
+                card.setAttribute('data-id', item.id);
+                card.onclick = function() { pick(this); };
+                
+                card.innerHTML = `
+                    <div class="card-img">
+                        <img src="static/images/${item.image_url || 'response.png'}">
+                    </div>
+                    <div class="card-body">
+                        <p class="card-brand">Originals / 00${item.id}</p>
+                        <h3 class="card-name">${item.name}</h3>
+                        <div class="card-price">₱${item.price.toLocaleString()}</div>
+                    </div>
+                `;
+                grid.appendChild(card);
             });
+
             console.log("Cloud Inventory Success!", inventory);
         } catch (e) {
             console.error("Cloud connection failed. Using local backup.");
             inventory = {
-                "1": { name: "Response Super", price: 6500 },
-                "2": { name: "Daily 3.0", price: 4000 },
-                "3": { name: "Yeezy Boost", price: 18000 },
-                "4": { name: "Stan Smith", price: 5300 }
+                "1": { name: "Response Super", price: 6500, image_url: "response.png" },
+                "2": { name: "Daily 3.0", price: 4000, image_url: "daily.png" },
+                "3": { name: "Yeezy Boost", price: 18000, image_url: "yeezy.png" },
+                "4": { name: "Stan Smith", price: 5300, image_url: "stansmith.png" }
             };
         }
     }
@@ -150,20 +131,14 @@
     loadProducts();
 
     function pick(element) {
-        // 1. Visual highlight
         document.querySelectorAll('.watch-card').forEach(card => card.classList.remove('selected'));
         element.classList.add('selected');
 
-        // 2. Get the ID
         const clickedId = String(element.getAttribute('data-id'));
-        
-        // 3. Find in inventory
         const item = inventory[clickedId];
 
         if (item) {
-            selId = clickedId; // Save the ID "1", "2", etc.
-            
-            // 4. Update UI
+            selId = clickedId;
             document.getElementById('pName').innerText = item.name;
             document.getElementById('pPrice').innerText = "₱" + item.price.toLocaleString();
             
@@ -178,10 +153,7 @@
     }
 
     async function order() {
-        if (!selId || !inventory[selId]) {
-            alert("Please select a shoe first!");
-            return;
-        }
+        if (!selId || !inventory[selId]) return;
 
         const item = inventory[selId];
         const btn = document.getElementById('buyBtn');
@@ -204,10 +176,10 @@
                 alert("SUCCESS! Order for " + item.name + " saved to Aiven Cloud.");
                 location.reload(); 
             } else {
-                alert("ORDER FAILED: The backend is live but the database rejected the save.");
+                alert("ORDER FAILED: Database rejected the save.");
             }
         } catch (err) {
-            alert("CONNECTION ERROR: Server is likely sleeping. Wait 15 seconds.");
+            alert("CONNECTION ERROR: Server is likely sleeping.");
         } finally {
             btn.disabled = false;
             btn.textContent = "CONFIRM ORDER";
